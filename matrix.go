@@ -12,7 +12,7 @@ type Matrix struct {
 	cols int
 }
 
-func CreateMatrix(rows int, cols int) Matrix {
+func createMatrix(rows int, cols int) Matrix {
 	matrix := Matrix{
 		rows: rows,
 		cols: cols,
@@ -24,7 +24,7 @@ func CreateMatrix(rows int, cols int) Matrix {
 	return matrix
 }
 
-func (matrix *Matrix) PrintMatrix() {
+func (matrix *Matrix) printMatrix() {
 	for i := range matrix.rows {
 		for j := range matrix.cols {
 			fmt.Print(matrix.data[i][j], " ")
@@ -33,8 +33,8 @@ func (matrix *Matrix) PrintMatrix() {
 	}
 }
 
-func Transpose(matrix *Matrix) Matrix {
-	new_matrix := CreateMatrix(matrix.cols, matrix.rows)
+func transpose(matrix *Matrix) Matrix {
+	new_matrix := createMatrix(matrix.cols, matrix.rows)
 	for i := range matrix.rows {
 		for j := range matrix.cols {
 			new_matrix.data[j][i] = matrix.data[i][j]
@@ -43,21 +43,11 @@ func Transpose(matrix *Matrix) Matrix {
 	return new_matrix
 }
 
-func (matrix *Matrix) Transpose() {
-	temp_matrix := CreateMatrix(matrix.cols, matrix.rows)
-	for i := range matrix.rows {
-		for j := range matrix.cols {
-			temp_matrix.data[j][i] = matrix.data[i][j]
-		}
-	}
-	matrix = &temp_matrix
-}
-
-func MatrixMult(left *Matrix, right *Matrix) (Matrix, error) {
+func matrixMult(left *Matrix, right *Matrix) (Matrix, error) {
 	if left.cols != right.rows {
 		return Matrix{}, MatrixOperatioError{leftMatrix: *left, rightMatrix: *right, operation: "Matrix Multiplication"}
 	}
-	res := CreateMatrix(left.rows, right.cols)
+	res := createMatrix(left.rows, right.cols)
 	for i := range left.rows {
 		for j := range right.cols {
 			for k := range right.rows {
@@ -67,18 +57,67 @@ func MatrixMult(left *Matrix, right *Matrix) (Matrix, error) {
 	}
 	return res, nil
 }
+func matrixAddition(left *Matrix, right *Matrix) Matrix {
+	result_matrix := createMatrix(left.rows, left.cols)
+	for i := range left.rows {
+		for j := range left.cols {
+			result_matrix.data[i][j] = left.data[i][j] + right.data[i][j]
+		}
+	}
+	return result_matrix
+}
 
-func Activation(matrix *Matrix, activation string) (Matrix, error) {
+func matrixSubtraction(left *Matrix, right *Matrix) Matrix {
+	result_matrix := createMatrix(left.rows, left.cols)
+	for i := range left.rows {
+		for j := range left.cols {
+			result_matrix.data[i][j] = left.data[i][j] - right.data[i][j]
+		}
+	}
+	return result_matrix
+}
+
+func elementwiseMatrixMult(matrix1 *Matrix, matrix2 *Matrix) Matrix {
+	result_matrix := createMatrix(matrix1.rows, matrix1.cols)
+	for i := range matrix1.rows {
+		for j := range matrix1.cols {
+			result_matrix.data[i][j] = matrix1.data[i][j] * matrix2.data[i][j]
+		}
+	}
+	return result_matrix
+}
+
+func scalarSubtraction(matrix *Matrix, scalar float64) Matrix {
+	result_matrix := createMatrix(matrix.rows, matrix.cols)
+	for i := range matrix.rows {
+		for j := range matrix.cols {
+			result_matrix.data[i][j] = scalar - matrix.data[i][j]
+		}
+	}
+	return result_matrix
+}
+
+func scalarMult(matrix *Matrix, scalar float64) Matrix {
+	result_matrix := createMatrix(matrix.rows, matrix.cols)
+	for i := range matrix.rows {
+		for j := range matrix.cols {
+			result_matrix.data[i][j] = scalar * matrix.data[i][j]
+		}
+	}
+	return result_matrix
+}
+
+func activation(matrix *Matrix, activation string) (Matrix, error) {
 	switch activation {
 	case "s":
-		return Sigmoid(matrix), nil
+		return sigmoid(matrix), nil
 	default:
 		return Matrix{}, errors.New("proper activation function was not given ")
 	}
 }
 
-func Sigmoid(matrix *Matrix) Matrix {
-	result_matrix := CreateMatrix(matrix.rows, matrix.cols)
+func sigmoid(matrix *Matrix) Matrix {
+	result_matrix := createMatrix(matrix.rows, matrix.cols)
 	for i := range matrix.rows {
 		for j := range matrix.cols {
 			result_matrix.data[i][j] = 1 / (1 + math.Exp(-matrix.data[i][j]))
