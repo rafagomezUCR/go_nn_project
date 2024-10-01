@@ -55,41 +55,26 @@ func (nn *NeuralNetwork) FeedFoward() []Matrix {
 }
 
 func (nn *NeuralNetwork) Train() {
-	for range nn.epochs {
-		layer_output_list := nn.FeedFoward()
-		output_error, e := CalculateError(&layer_output_list[len(layer_output_list)-1], &nn.target)
-		checkError(e)
-		nn.Backpropogate(layer_output_list, &output_error)
-	}
+	layer_output_list := nn.FeedFoward()
+	output_error, e := CalculateError(&layer_output_list[len(layer_output_list)-1], &nn.target)
+	checkError(e)
+	nn.Backpropogate(layer_output_list, &output_error)
 }
 
 func (nn *NeuralNetwork) Backpropogate(layer_output_list []Matrix, output_error *Matrix) {
 	for i := len(nn.weights) - 1; i >= 0; i-- {
-		weight_t := transpose(&(nn.weights)[i])
-		error_hidden, e := matrixMult(&weight_t, output_error)
+		weight_t := transpose(&nn.weights[i])
+		hidden_error, e := matrixMult(&weight_t, output_error)
 		checkError(e)
-		// right here goes gradient descent
-		one_subtract_o := scalarSubtraction(&layer_output_list[i+1], 1.0)
-		de_dw := elementwiseMatrixMult(&layer_output_list[i+1], &one_subtract_o)
-		de_dw = elementwiseMatrixMult(output_error, &de_dw)
-		hidden_outputs := transpose(&layer_output_list[i])
-		de_dw, e = matrixMult(&de_dw, &hidden_outputs)
+		do_dw := scalarMinusMatrix(1.0, &layer_output_list[i+1])
+		do_dw = elementwiseMatrixMult(&do_dw, &layer_output_list[i+1])
+		de_dw := elementwiseMatrixMult(output_error, &do_dw)
+		previous_output_t := transpose(&layer_output_list[i])
+		de_dw, e = matrixMult(&de_dw, &previous_output_t)
 		checkError(e)
 		de_dw = scalarMult(&de_dw, nn.learning_rate)
-		nn.weights[i] = matrixSubtraction(&(nn.weights)[i], &de_dw)
-		*output_error = error_hidden
-		// weight_t := transpose(&nn.weights[i])
-		// hidden_error, e := matrixMult(&weight_t, output_error)
-		// checkError(e)
-		// do_dw := scalarSubtraction(&layer_output_list[i+1], 1.0)
-		// do_dw = elementwiseMatrixMult(&do_dw, &layer_output_list[i+1])
-		// de_dw := elementwiseMatrixMult(output_error, &do_dw)
-		// previous_output_t := transpose(&layer_output_list[i])
-		// de_dw, e = matrixMult(&de_dw, &previous_output_t)
-		// checkError(e)
-		// de_dw = scalarMult(&de_dw, nn.learning_rate)
-		// nn.weights[i] = matrixSubtraction(&nn.weights[i], &de_dw)
-		// output_error = &hidden_error
+		nn.weights[i] = matrixSubtraction(&nn.weights[i], &de_dw)
+		output_error = &hidden_error
 	}
 }
 
@@ -107,16 +92,19 @@ func InitializeWeights(input_layer_size int, neurons_per_layer []int, output_lay
 			weightMatrices = append(weightMatrices, w)
 		}
 	}
+	upper_limit := math.Sqrt(6 / (float64(input_layer_size) + float64(output_layer_size)))
+	lower_limit := upper_limit * -1
 	for i := range len(weightMatrices) {
 		for j := range weightMatrices[i].rows {
 			for k := range weightMatrices[i].cols {
-				weightMatrices[i].data[j][k] = rand.Float64() - 0.5
+				weightMatrices[i].data[j][k] = lower_limit + rand.Float64()*(upper_limit-lower_limit)
 			}
 		}
 	}
 	return weightMatrices
 }
 
+// this isnt the network cost, this is the error derivative
 func CalculateError(output *Matrix, target *Matrix) (Matrix, error) {
 	if output.rows != target.rows || output.cols != target.cols {
 		return Matrix{}, MatrixOperatioError{leftMatrix: *output, rightMatrix: *target, operation: "Error Calculation"}
@@ -124,7 +112,7 @@ func CalculateError(output *Matrix, target *Matrix) (Matrix, error) {
 	error_matrix := createMatrix(output.rows, output.cols)
 	for i := range error_matrix.rows {
 		for j := range error_matrix.cols {
-			error_matrix.data[i][j] = math.Pow(target.data[i][j]-output.data[i][j], 2)
+			error_matrix.data[i][j] = -(target.data[i][j] - output.data[i][j])
 		}
 	}
 	return error_matrix, nil

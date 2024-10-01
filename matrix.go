@@ -87,7 +87,7 @@ func elementwiseMatrixMult(matrix1 *Matrix, matrix2 *Matrix) Matrix {
 	return result_matrix
 }
 
-func scalarSubtraction(matrix *Matrix, scalar float64) Matrix {
+func scalarMinusMatrix(scalar float64, matrix *Matrix) Matrix {
 	result_matrix := createMatrix(matrix.rows, matrix.cols)
 	for i := range matrix.rows {
 		for j := range matrix.cols {

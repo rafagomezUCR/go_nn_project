@@ -27,9 +27,9 @@ func main() {
 	test_scanner := bufio.NewScanner(test_file)
 	for test_scanner.Scan() {
 		line := test_scanner.Text()
-		il, target := convertFileValuesToMatrix(&line, ",")
+		input_list, target := convertFileValuesToMatrix(&line, ",")
 		target_list := createTargetList(target)
-		test_input_layers = append(test_input_layers, il)
+		test_input_layers = append(test_input_layers, input_list)
 		test_target_list = append(test_target_list, target_list)
 	}
 	if err := test_scanner.Err(); err != nil {
@@ -49,15 +49,16 @@ func main() {
 	nn.input_layer = test_input_layers[0]
 	a := nn.Predict()
 	a.printMatrix()
-	test_target_list[0].printMatrix()
 	for i := range 10000 {
 		nn.input_layer = train_input_layers[i]
 		nn.target = train_traget_list[i]
 		nn.Train()
 	}
+	fmt.Println()
 	nn.input_layer = test_input_layers[0]
 	b := nn.Predict()
 	b.printMatrix()
+	test_target_list[0].printMatrix()
 }
 
 func convertFileValuesToMatrix(input *string, delimiter string) (Matrix, float64) {
