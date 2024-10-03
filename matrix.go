@@ -57,15 +57,6 @@ func matrixMult(left *Matrix, right *Matrix) (Matrix, error) {
 	}
 	return res, nil
 }
-func matrixAddition(left *Matrix, right *Matrix) Matrix {
-	result_matrix := createMatrix(left.rows, left.cols)
-	for i := range left.rows {
-		for j := range left.cols {
-			result_matrix.data[i][j] = left.data[i][j] + right.data[i][j]
-		}
-	}
-	return result_matrix
-}
 
 func matrixSubtraction(left *Matrix, right *Matrix) Matrix {
 	result_matrix := createMatrix(left.rows, left.cols)
